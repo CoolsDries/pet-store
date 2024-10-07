@@ -21,9 +21,11 @@ export class StoreMenuComponent implements AfterViewInit {
   ngOnInit(): void {
     // Subscibe to selected stores
     this.storeService.selectedStores$.subscribe({
-      next: (stores) => this.selectedStores = stores,
-      error: (e) => console.error('Error while updating selected stores: ', e),
-      complete: () => console.info('Updated selected stores')
+      next: (stores) => {
+        this.selectedStores = stores
+        console.info('Updated selected stores')
+      },
+      error: (e) => console.error('Error while updating selected stores: ', e)
     });
   }
 

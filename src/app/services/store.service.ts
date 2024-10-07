@@ -1,10 +1,11 @@
-import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, catchError, Observable, throwError } from 'rxjs';
 import { Animal } from '../animal/animal.model';
 import { Species } from '../species/species.module';
 import { Store } from '../store-menu/store.model';
 import { environment } from '../../environments/environment.development';
+import { Stock } from '../chart-menu/stock.model';
 
 @Injectable({
   providedIn: 'root'
@@ -18,7 +19,7 @@ export class StoreService {
   // Public observable, that notifices all listeners when selectedStores is updated.
   selectedStores$ = this.selectedStores.asObservable();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   // GET: api/Stores
   getStores(): Observable<Store[]> {
@@ -48,13 +49,18 @@ export class StoreService {
     );
   }
 
-  // GET: api/{id}/Stock
-  // TODO: stock model
-  // getStock(id: number): Observable<Stock[]> {
-  //   return this.http.get<Stock[]>(`${this.apiUrl}/${id}/Stock`).pipe(
-  //     catchError(this.handleError)
-  //   );
-  // }
+  // GET: api/Stores/Stock
+  getStoresStock(storeIds: number[]): Observable<Stock> {
+    // Build id parameter list
+    let params = new HttpParams();
+    storeIds.forEach(id => {
+      params = params.append('ids', id.toString());
+    });
+
+    return this.http.get<Stock>(`${this.apiUrl}/Stock`, { params }).pipe(
+      catchError(this.handleError)
+    );
+  }
 
   // PUT: api/Stores/{id}
   updateStore(id: number, store: Store): Observable<Store> {

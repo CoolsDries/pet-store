@@ -1,0 +1,90 @@
+import { Component } from '@angular/core';
+import { StoreService } from '../../services/store.service';
+import { Store } from '../../store-menu/store.model';
+import Chart from 'chart.js/auto';
+import { Stock } from '../stock.model';
+import { BehaviorSubject } from 'rxjs';
+
+@Component({
+  selector: 'app-amount-per-species',
+  standalone: true,
+  imports: [],
+  templateUrl: './amount-per-species.component.html',
+  styleUrl: './amount-per-species.component.css'
+})
+export class AmountPerSpeciesComponent {
+  chart: any
+
+  constructor(private storeService: StoreService) { }
+
+  ngOnInit(): void {
+
+    // Subscibe to selected stores
+    this.storeService.selectedStores$.subscribe({
+      next: (stores) => {
+        if (stores.length > 0) {
+          var ids = stores.map((store) => store.id);
+          // Get new stocks & update chart with new data
+          this.getStoresStock(ids);
+        }
+
+        console.info('Updated selected stores')
+      },
+      error: (e) => console.error('Error while updating selected stores: ', e)
+    });
+
+
+  }
+
+  getStoresStock(ids: number[]): void {
+    this.storeService.getStoresStock(ids).subscribe({
+      next: (speciesData) => {
+        var xLabels = speciesData.speciesStocks.map((s) => s.speciesName);
+        var yLabels = speciesData.speciesStocks.map((s) => s.animalsAmount);
+
+        // Rewrite chart with new data
+        // Check if chart is already created
+        if (this.chart instanceof Chart) {
+          console.log("try updateing chart")
+          this.updateChart(this.chart, xLabels, yLabels)
+        } else {
+          this.chart = this.createChart(xLabels, yLabels)
+        }
+
+      },
+      error: (e) => console.error('Error while fetching stores: ', e),
+      complete: () => {
+        console.info('Fetched stock')
+      }
+    });
+  }
+
+  createChart(xLabels: any, yLabels:any): Chart {
+    return new Chart('canvas', {
+      type: 'bar',
+      data: {
+        labels: xLabels,
+        datasets: [
+          {
+            label: 'Aantal dieren',
+            data: yLabels,
+            borderWidth: 1,
+          },
+        ],
+      },
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true,
+          },
+        },
+      },
+    });
+  }
+
+  updateChart(chart: Chart, xLabels: any[], yLabels:any) {    
+    chart.data.labels = xLabels;
+    chart.data.datasets[0].data = yLabels;
+    chart.update()
+  }
+}
