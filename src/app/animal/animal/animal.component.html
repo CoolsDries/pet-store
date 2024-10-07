@@ -1,1 +1,8 @@
-<p>animal works!</p>
+<div *ngIf="animals.length === 0">Geen dieren gevonden.</div>
+<ul *ngIf="animals.length > 0">
+  <li *ngFor="let animal of animals">
+    <h3>{{ animal.name }}</h3>
+    <p>Prijs: {{ animal.price }} EUR</p>
+    <p>Beschrijving: {{ animal.description }}</p>
+  </li>
+</ul>
