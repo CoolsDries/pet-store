@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
+import { Store } from '../../store.model';
 
 @Component({
   selector: 'app-store-select-item',
@@ -8,5 +9,6 @@ import { Component } from '@angular/core';
   styleUrl: './store-select-item.component.css'
 })
 export class StoreSelectItemComponent {
-
+  // Store object injected via parent component
+  @Input() store!: Store;
 }

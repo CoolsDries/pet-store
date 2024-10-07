@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { catchError, Observable, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, Observable, throwError } from 'rxjs';
 import { Animal } from '../animal/animal.model';
 import { Species } from '../species/species.module';
 import { Store } from '../store-menu/store.model';
@@ -12,6 +12,11 @@ import { environment } from '../../environments/environment.development';
 export class StoreService {
   // Adding /stores to url, because it is needed for each request
   private apiUrl = `${environment.apiUrl}/stores`;
+
+  // Selected stores List
+  private selectedStores = new BehaviorSubject<Store[]>([]);
+  // Public observable, that notifices all listeners when selectedStores is updated.
+  selectedStores$ = this.selectedStores.asObservable();
 
   constructor(private http: HttpClient) {}
 
@@ -80,6 +85,10 @@ export class StoreService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
       catchError(this.handleError)
     );
+  }
+
+  setSelectedStores(stores: Store[]): void {
+    this.selectedStores.next(stores);
   }
 
   // Error handling method

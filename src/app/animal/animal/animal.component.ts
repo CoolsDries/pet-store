@@ -21,13 +21,10 @@ export class AnimalComponent {
   }
 
   fetchAnimals(): void {
-    this.animalService.getAnimals().subscribe(
-      (data: Animal[]) => {
-        this.animals = data;
-      },
-      (error) => {
-        console.error('Error fetching animals:', error);
-      }
-    );
+    this.animalService.getAnimals().subscribe({
+      next: (animals) => this.animals = animals,
+      error: (e) => console.error('Error while fetching animals: ', e),
+      complete: () => console.info('Fetched animlas')
+    });
   }
 }

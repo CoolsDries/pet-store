@@ -1,1 +1,16 @@
-<p>store-menu works!</p>
+<div *ngIf="selectedStores.length === 0">
+    <p>Geen winkel(s) geselecteerd</p>
+</div>
+
+<div *ngIf="selectedStores.length > 0">
+    <div *ngFor="let store of selectedStores">
+        <app-store-menu-item [store]="store"></app-store-menu-item>
+    </div>
+</div>
+
+<button (click)="openModal()">Wijzig winkels</button>
+<!-- drawer.component.html -->
+<dialog type="modal" id="dialog" class="drawer" #dialog>
+    <app-store-select (closeModalEmitter)="closeModal()"></app-store-select>
+</dialog>
+
