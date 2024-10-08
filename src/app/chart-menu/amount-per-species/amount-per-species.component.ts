@@ -50,7 +50,7 @@ export class AmountPerSpeciesComponent {
         // Rewrite chart with new data
         // Check if chart is already created
         if (this.chart instanceof Chart) {
-          this.updateChart(this.chart, xLabels, yLabels)
+          this.updateChart(this.chart, speciesAmountForStores.storeName, xLabels, yLabels)
         } else {
           this.chart = this.createChart(speciesAmountForStores.storeName ,xLabels, yLabels)
         }
@@ -77,13 +77,13 @@ export class AmountPerSpeciesComponent {
         ],
       },
       options: {
+        plugins: {
+          title:{
+            display: true,
+            text: chartName,
+          }
+        },
         scales: {
-          x: {
-            title:{
-              display: true,
-              text: chartName,
-            }
-          },
           y: {
             beginAtZero: true,
           },
@@ -92,9 +92,20 @@ export class AmountPerSpeciesComponent {
     });
   }
 
-  updateChart(chart: Chart, xLabels: any[], yLabels:any) {    
+  updateChart(chart: Chart, chartName:string, xLabels: any[], yLabels:any) {    
     chart.data.labels = xLabels;
     chart.data.datasets[0].data = yLabels;
+
+    // Ensure the plugins and title exist before trying to access them
+    // Otherwise error in ...titel.text assignment
+    if (!chart.options.plugins) {
+      chart.options.plugins = {};
+    }
+    if (!chart.options.plugins.title) {
+      chart.options.plugins.title = {};
+    }
+    chart.options.plugins.title.text = chartName;
+
     chart.update()
   }
 }
