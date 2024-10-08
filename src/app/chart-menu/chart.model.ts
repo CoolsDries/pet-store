@@ -1,4 +1,9 @@
 export interface SpeciesAmountForStores {
-    storeName: string;
-    speciesAmount: { [speciesName: string]: number };
+    name: string;
+    speciesAmounts: { [speciesName: string]: number };
+}
+
+export interface CompareSpeciesAmountForStores {
+    name: string;
+    stores: SpeciesAmountForStores[];
 }

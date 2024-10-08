@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment.development';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Observable, catchError, throwError } from 'rxjs';
-import { SpeciesAmountForStores } from '../chart-menu/chart.model';
+import { CompareSpeciesAmountForStores, SpeciesAmountForStores } from '../chart-menu/chart.model';
 
 @Injectable({
   providedIn: 'root'
@@ -25,6 +25,19 @@ export class ChartService {
       catchError(this.handleError)
     );
   }
+
+    // GET: api/charts/CompareSpeciesAmountForStores
+    getCompareSpeciesAmountForStores(storeIds: number[]): Observable<CompareSpeciesAmountForStores> {
+      // Build id parameter list
+      let params = new HttpParams();
+      storeIds.forEach(id => {
+        params = params.append('ids', id.toString());
+      });
+  
+      return this.http.get<CompareSpeciesAmountForStores>(`${this.apiUrl}/CompareSpeciesAmountForStores`, { params }).pipe(
+        catchError(this.handleError)
+      );
+    }
 
   // Error handling method
   // TODO: improve messages

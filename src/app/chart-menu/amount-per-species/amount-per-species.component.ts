@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { StoreService } from '../../services/store.service';
 import Chart from 'chart.js/auto';
-import { SpeciesAmountForStores } from '../chart.model';
+import { CompareSpeciesAmountForStores, SpeciesAmountForStores } from '../chart.model';
 import { ChartService } from '../../services/chart.service';
 
 @Component({
@@ -13,6 +13,7 @@ import { ChartService } from '../../services/chart.service';
 })
 export class AmountPerSpeciesComponent {
   chart: any
+  compare: boolean = false;
 
   constructor(private storeService: StoreService, private chartService: ChartService) { }
 
@@ -21,17 +22,9 @@ export class AmountPerSpeciesComponent {
     // Subscibe to selected stores
     this.storeService.selectedStores$.subscribe({
       next: (stores) => {
-        if (stores.length > 0) {
-          var ids = stores.map((store) => store.id);
-          // Get new stocks & update chart with new data
-          this.getStoresStock(ids);
-        } else {
-          // No stores, so no chart
-          if (this.chart instanceof Chart) {
-            this.chart.destroy();
-            this.chart = null;
-          }
-        }
+
+        var ids = stores.map((store) => store.id);
+        this.manageCharts(ids);
 
         console.info('Updated selected stores')
       },
@@ -39,46 +32,89 @@ export class AmountPerSpeciesComponent {
     });
   }
 
-  getStoresStock(ids: number[]): void {
-    this.chartService.getSpeciesAmountForStores(ids).subscribe({
-      next: (speciesAmountForStores: SpeciesAmountForStores) => {
-
-        var speciesAmount = speciesAmountForStores.speciesAmount
-        var xLabels = Object.keys(speciesAmount);
-        var yLabels = Object.values(speciesAmount);
-
-        // Rewrite chart with new data
-        // Check if chart is already created
-        if (this.chart instanceof Chart) {
-          this.updateChart(this.chart, speciesAmountForStores.storeName, xLabels, yLabels)
-        } else {
-          this.chart = this.createChart(speciesAmountForStores.storeName ,xLabels, yLabels)
-        }
-
-      },
-      error: (e) => console.error('Error while fetching stores: ', e),
-      complete: () => {
-        console.info('Fetched stock')
-      }
-    });
+  // TODO make compare observable
+  changeCompare() {
+    this.compare = !this.compare
   }
 
-  createChart(chartName: string, xLabels: any, yLabels:any): Chart {
-    return new Chart('canvas', {
+  destroyChart() {
+    if (this.chart instanceof Chart) {
+      this.chart.destroy();
+      this.chart = null;
+    }
+  }
+
+  manageCharts(ids: number[]) {
+    if (ids.length <= 0) {
+      // No stores, so no chart to display
+      this.destroyChart();
+    } else {
+      // Get required data
+      if (this.compare) {
+        // Use compare chart
+        this.chartService.getCompareSpeciesAmountForStores(ids).subscribe({
+          next: (compareSpeciesAmountForStores: CompareSpeciesAmountForStores) => {
+            // Generate new data
+            var data = this.generateChartData(compareSpeciesAmountForStores.stores)
+            // Rewrite chart with new data
+
+            this.updateChart(compareSpeciesAmountForStores.name, data);
+          },
+          error: (e) => console.error('Error while fetching chart data: ', e),
+          complete: () => {
+            console.info('Fetched chart data')
+          }
+        });
+      } else {
+        //Use not compare chart
+        this.chartService.getSpeciesAmountForStores(ids).subscribe({
+          next: (speciesAmountForStores: SpeciesAmountForStores) => {
+            // Generate new data
+            var data = this.generateChartData([speciesAmountForStores])
+            // Rewrite chart with new data
+            this.updateChart(speciesAmountForStores.name, data);
+          },
+          error: (e) => console.error('Error while fetching chart data: ', e),
+          complete: () => {
+            console.info('Fetched chart data')
+          }
+        });
+      }
+    }
+  }
+
+  updateChart(chartName: string, datasets: any) {
+    console.log("update chart")
+    // Check if chart is already created
+    if (!(this.chart instanceof Chart)) {
+      this.createChart(chartName, datasets);
+    } else {
+      // Update datasets
+      this.chart.data.datasets = datasets;
+
+      // Ensure the plugins and title exist before trying to access them
+      // Otherwise error in ...titel.text assignment
+      if (!this.chart.options.plugins) {
+        this.chart.options.plugins = {};
+      }
+      if (!this.chart.options.plugins.title) {
+        this.chart.options.plugins.title = {};
+      }
+      this.chart.options.plugins.title.text = chartName;
+
+      this.chart.update()
+    }
+  }
+
+  createChart(chartName: string, datasets: any) {
+    this.chart = new Chart('canvas', {
       type: 'bar',
       data: {
-        labels: xLabels,
-        datasets: [
-          {
-            label: 'Aantal dieren',
-            data: yLabels,
-            borderWidth: 1,
-          },
-        ],
+        datasets: datasets
       },
       options: {
         plugins: {
-          title:{
+          title: {
             display: true,
             text: chartName,
           }
@@ -90,22 +126,29 @@ export class AmountPerSpeciesComponent {
         },
       },
     });
+
   }
 
-  updateChart(chart: Chart, chartName:string, xLabels: any[], yLabels:any) {    
-    chart.data.labels = xLabels;
-    chart.data.datasets[0].data = yLabels;
+  // TODO: optimize
+  generateChartData(speciesAmountForStores: SpeciesAmountForStores[]) {
+    var datasets: { label: string; data: { x: string; y: number; }[] }[] = [];
 
-    // Ensure the plugins and title exist before trying to access them
-    // Otherwise error in ...titel.text assignment
-    if (!chart.options.plugins) {
-      chart.options.plugins = {};
-    }
-    if (!chart.options.plugins.title) {
-      chart.options.plugins.title = {};
-    }
-    chart.options.plugins.title.text = chartName;
+    speciesAmountForStores.forEach((speciesAmountForStore) => {
+      // Map data to dataset
+      var newData: { x: string; y: number; }[] = [];
+      Object.entries(speciesAmountForStore.speciesAmounts).forEach(([key, value]) => {
+        newData.push({
+          x: key, y: value
+        })
+      });
 
-    chart.update()
+      datasets.push({
+        label: speciesAmountForStore.name,
+        data: newData
+      })
+      newData = [];
+    });
+
+    return datasets;
   }
 }
