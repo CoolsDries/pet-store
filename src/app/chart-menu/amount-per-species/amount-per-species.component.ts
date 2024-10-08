@@ -25,14 +25,18 @@ export class AmountPerSpeciesComponent {
           var ids = stores.map((store) => store.id);
           // Get new stocks & update chart with new data
           this.getStoresStock(ids);
+        } else {
+          // No stores, so no chart
+          if (this.chart instanceof Chart) {
+            this.chart.destroy();
+            this.chart = null;
+          }
         }
 
         console.info('Updated selected stores')
       },
       error: (e) => console.error('Error while updating selected stores: ', e)
     });
-
-
   }
 
   getStoresStock(ids: number[]): void {
@@ -46,7 +50,6 @@ export class AmountPerSpeciesComponent {
         // Rewrite chart with new data
         // Check if chart is already created
         if (this.chart instanceof Chart) {
-          console.log("try updateing chart")
           this.updateChart(this.chart, xLabels, yLabels)
         } else {
           this.chart = this.createChart(speciesAmountForStores.storeName ,xLabels, yLabels)
