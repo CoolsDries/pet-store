@@ -1,16 +1,35 @@
-<div *ngIf="selectedStores.length === 0">
-    <p>Geen winkel(s) geselecteerd</p>
-</div>
-
-<div *ngIf="selectedStores.length > 0">
-    <div *ngFor="let store of selectedStores">
-        <app-store-menu-item [store]="store"></app-store-menu-item>
+<section class="mt-5 mb-2">
+  <div class="flex flex-row items-end">
+    <div class="grow">
+      <h1>Winkel selectie</h1>
+      <p>Selecteer de winkels waarvan u grafieken wilt genereren.</p>
     </div>
-</div>
+    <div>
+      <button (click)="openModal()" class="button-primary">
+        Wijzig winkels
+      </button>
+      <!-- drawer.component.html -->
+      <dialog type="modal" id="dialog" class="drawer" #dialog>
+        <app-store-select (closeModalEmitter)="closeModal()"></app-store-select>
+      </dialog>
+    </div>
+  </div>
 
-<button (click)="openModal()">Wijzig winkels</button>
-<!-- drawer.component.html -->
-<dialog type="modal" id="dialog" class="drawer" #dialog>
-    <app-store-select (closeModalEmitter)="closeModal()"></app-store-select>
-</dialog>
+  <div class="px-2 py-1">
+    <div
+      *ngIf="selectedStores.length === 0"
+      class="px-4 py-2 shadow-md shadow-[gray] w-1/5"
+    >
+      <p>Geen winkel(s) geselecteerd</p>
+    </div>
 
+    <div *ngIf="selectedStores.length > 0" class="flex flex-row gap-2">
+      <div
+        *ngFor="let store of selectedStores"
+        class="px-4 py-2 shadow-md shadow-[gray] w-1/5"
+      >
+        <app-store-menu-item [store]="store"></app-store-menu-item>
+      </div>
+    </div>
+  </div>
+</section>
