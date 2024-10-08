@@ -1,9 +1,8 @@
 import { Component } from '@angular/core';
 import { StoreService } from '../../services/store.service';
-import { Store } from '../../store-menu/store.model';
 import Chart from 'chart.js/auto';
-import { Stock } from '../stock.model';
-import { BehaviorSubject } from 'rxjs';
+import { SpeciesAmountForStores } from '../chart.model';
+import { ChartService } from '../../services/chart.service';
 
 @Component({
   selector: 'app-amount-per-species',
@@ -15,7 +14,7 @@ import { BehaviorSubject } from 'rxjs';
 export class AmountPerSpeciesComponent {
   chart: any
 
-  constructor(private storeService: StoreService) { }
+  constructor(private storeService: StoreService, private chartService: ChartService) { }
 
   ngOnInit(): void {
 
@@ -37,10 +36,12 @@ export class AmountPerSpeciesComponent {
   }
 
   getStoresStock(ids: number[]): void {
-    this.storeService.getStoresStock(ids).subscribe({
-      next: (speciesData) => {
-        var xLabels = speciesData.speciesStocks.map((s) => s.speciesName);
-        var yLabels = speciesData.speciesStocks.map((s) => s.animalsAmount);
+    this.chartService.getSpeciesAmountForStores(ids).subscribe({
+      next: (speciesAmountForStores: SpeciesAmountForStores) => {
+
+        var speciesAmount = speciesAmountForStores.speciesAmount
+        var xLabels = Object.keys(speciesAmount);
+        var yLabels = Object.values(speciesAmount);
 
         // Rewrite chart with new data
         // Check if chart is already created
@@ -48,7 +49,7 @@ export class AmountPerSpeciesComponent {
           console.log("try updateing chart")
           this.updateChart(this.chart, xLabels, yLabels)
         } else {
-          this.chart = this.createChart(xLabels, yLabels)
+          this.chart = this.createChart(speciesAmountForStores.storeName ,xLabels, yLabels)
         }
 
       },
@@ -59,7 +60,7 @@ export class AmountPerSpeciesComponent {
     });
   }
 
-  createChart(xLabels: any, yLabels:any): Chart {
+  createChart(chartName: string, xLabels: any, yLabels:any): Chart {
     return new Chart('canvas', {
       type: 'bar',
       data: {
@@ -74,6 +75,12 @@ export class AmountPerSpeciesComponent {
       },
       options: {
         scales: {
+          x: {
+            title:{
+              display: true,
+              text: chartName,
+            }
+          },
           y: {
             beginAtZero: true,
           },

@@ -1,11 +1,10 @@
-import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, catchError, Observable, throwError } from 'rxjs';
 import { Animal } from '../animal/animal.model';
 import { Species } from '../species/species.module';
 import { Store } from '../store-menu/store.model';
 import { environment } from '../../environments/environment.development';
-import { Stock } from '../chart-menu/stock.model';
 
 @Injectable({
   providedIn: 'root'
@@ -45,19 +44,6 @@ export class StoreService {
   // GET: api/Stores/{id}/Species
   getStoreSpecies(id: number): Observable<Species[]> {
     return this.http.get<Species[]>(`${this.apiUrl}/${id}/Species`).pipe(
-      catchError(this.handleError)
-    );
-  }
-
-  // GET: api/Stores/Stock
-  getStoresStock(storeIds: number[]): Observable<Stock> {
-    // Build id parameter list
-    let params = new HttpParams();
-    storeIds.forEach(id => {
-      params = params.append('ids', id.toString());
-    });
-
-    return this.http.get<Stock>(`${this.apiUrl}/Stock`, { params }).pipe(
       catchError(this.handleError)
     );
   }
