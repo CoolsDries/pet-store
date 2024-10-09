@@ -4,7 +4,6 @@ import { Species } from '../../species/species.module';
 import { AnimalService } from '../../services/animal.service';
 import { SpeciesService } from '../../services/species.service';
 import { StoreService } from '../../services/store.service';
-import { Animal } from '../animal.model';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
