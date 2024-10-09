@@ -8,6 +8,26 @@
     @apply text-white px-4 py-2 rounded bg-indigo-500;
 }
 
+/* global styling for from */
+.form {
+    @apply shadow-md shadow-[gray] px-4 py-2 w-1/3;
+}
+
+.form > .form-element {
+    @apply flex flex-col pt-2;
+}
+
+.form > .form-element > button {
+    @apply text-white px-4 py-2 rounded bg-indigo-500 ml-auto;
+}
+
+.form > .form-element > input, textarea, select {
+    @apply bg-indigo-100 px-2 py-1.5 rounded-md;
+    @apply disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-300
+}
+
+
+
 @layer base {
     h1 {
         @apply text-2xl font-bold

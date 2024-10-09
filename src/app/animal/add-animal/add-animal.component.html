@@ -1,0 +1,50 @@
+<form class="form" [formGroup]="animalForm" (ngSubmit)="addAnimal()">
+  <h1>Dier toevoegen</h1>
+
+  <div class="form-element">
+    <label for="store">Selecteer winkel</label>
+    <select id="store" formControlName="storeId" required>
+      <option *ngFor="let store of stores" [value]="store.id">
+        {{ store.name }}
+      </option>
+    </select>
+  </div>
+
+  <div class="form-element">
+    <label for="species">Selecteer soort</label>
+    <select id="species" formControlName="speciesId" required>
+      <option *ngFor="let species of species" [value]="species.id">
+        {{ species.name }}
+      </option>
+    </select>
+  </div>
+
+  <div class="form-element">
+    <label for="name">Naam</label>
+    <input
+      type="text"
+      id="name"
+      formControlName="name"
+      required
+      [placeholder]="'Naam'"
+    />
+  </div>
+
+  <div class="form-element">
+    <label for="price">Prijs</label>
+    <input type="number" id="price" formControlName="price" required />
+  </div>
+
+  <div class="form-element">
+    <label for="description">Beschrijving</label>
+    <textarea
+      id="description"
+      formControlName="description"
+      [placeholder]="'Beschrijving'"
+    ></textarea>
+  </div>
+
+  <div class="form-element">
+    <button type="submit" [disabled]="animalForm.invalid">Add Animal</button>
+  </div>
+</form>
