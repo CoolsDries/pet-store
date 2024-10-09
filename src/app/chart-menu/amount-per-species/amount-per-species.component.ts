@@ -1,19 +1,23 @@
 import { Component } from '@angular/core';
 import { StoreService } from '../../services/store.service';
 import Chart from 'chart.js/auto';
-import { CompareSpeciesAmountForStores, SpeciesAmountForStores } from '../chart.model';
+import { ChartDatasets, ChartDatasetsData, CompareSpeciesAmountForStores, SpeciesAmountForStores } from '../chart.model';
 import { ChartService } from '../../services/chart.service';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-amount-per-species',
   standalone: true,
-  imports: [],
+  imports: [CommonModule],
   templateUrl: './amount-per-species.component.html',
   styleUrl: './amount-per-species.component.css'
 })
 export class AmountPerSpeciesComponent {
-  chart: any
-  compare: boolean = false;
+  chartNormal: any
+  chartCompare: any
+
+  chartsToCompare: boolean = false
+  showCompareChart: boolean = false
 
   constructor(private storeService: StoreService, private chartService: ChartService) { }
 
@@ -32,82 +36,114 @@ export class AmountPerSpeciesComponent {
     });
   }
 
-  // TODO make compare observable
-  changeCompare() {
-    this.compare = !this.compare
-  }
-
-  destroyChart() {
-    if (this.chart instanceof Chart) {
-      this.chart.destroy();
-      this.chart = null;
+  destroyChart(chart: any) : Chart {
+    if (chart instanceof Chart) {
+      chart.destroy();
+      chart = null;
     }
+    return chart;
   }
 
   manageCharts(ids: number[]) {
+    this.showCompareChart = false;
+    
     if (ids.length <= 0) {
       // No stores, so no chart to display
-      this.destroyChart();
-    } else {
-      // Get required data
-      if (this.compare) {
-        // Use compare chart
-        this.chartService.getCompareSpeciesAmountForStores(ids).subscribe({
-          next: (compareSpeciesAmountForStores: CompareSpeciesAmountForStores) => {
-            // Generate new data
-            var data = this.generateChartData(compareSpeciesAmountForStores.stores)
-            // Rewrite chart with new data
+      this.chartNormal = this.destroyChart(this.chartNormal);
+      this.chartCompare = this.destroyChart(this.chartCompare);
+      this.chartsToCompare = false
 
-            this.updateChart(compareSpeciesAmountForStores.name, data);
-          },
-          error: (e) => console.error('Error while fetching chart data: ', e),
-          complete: () => {
-            console.info('Fetched chart data')
-          }
-        });
+    } else {
+      // Set visibilty of compare button
+      if (ids.length > 1) {
+        this.chartsToCompare = true
       } else {
-        //Use not compare chart
-        this.chartService.getSpeciesAmountForStores(ids).subscribe({
-          next: (speciesAmountForStores: SpeciesAmountForStores) => {
-            // Generate new data
-            var data = this.generateChartData([speciesAmountForStores])
-            // Rewrite chart with new data
-            this.updateChart(speciesAmountForStores.name, data);
-          },
-          error: (e) => console.error('Error while fetching chart data: ', e),
-          complete: () => {
-            console.info('Fetched chart data')
-          }
-        });
+        this.chartsToCompare = false
       }
+
+      // Get required data
+      // Generate both charts, to minimize API calls. Only show the needed
+
+      //Generate compare chart
+      this.chartService.getSpeciesAmountForStores(ids).subscribe({
+        next: (speciesAmountForStores: SpeciesAmountForStores) => {
+          // Generate new data
+          var data = this.generateChartData([speciesAmountForStores])
+
+          this.chartNormal = this.createOrUpdateChart(this.chartNormal, "canvasNormal", speciesAmountForStores.name, data);
+        },
+        error: (e) => console.error('Error while fetching chart data: ', e),
+        complete: () => {
+          console.info('Fetched chart data')
+        }
+      });
+
+      // Generate thogether chart
+      this.chartService.getCompareSpeciesAmountForStores(ids).subscribe({
+        next: (compareSpeciesAmountForStores: CompareSpeciesAmountForStores) => {
+          // Generate new data
+          var data = this.generateChartData(compareSpeciesAmountForStores.stores);
+
+          this.chartCompare = this.createOrUpdateChart(this.chartCompare, "canvasCompare", compareSpeciesAmountForStores.name, data);
+        },
+        error: (e) => console.error('Error while fetching chart data: ', e),
+        complete: () => {
+          console.info('Fetched chart data')
+        }
+      });
+
+      // Show right chart
+      this.chartToggle();
     }
   }
 
-  updateChart(chartName: string, datasets: any) {
-    console.log("update chart")
-    // Check if chart is already created
-    if (!(this.chart instanceof Chart)) {
-      this.createChart(chartName, datasets);
+  chartToggle() {
+    const canvasNormal = document.getElementById("canvasNormal");
+    const canvasCompare = document.getElementById("canvasCompare")
+    // Display right chart
+    if (this.showCompareChart) {
+      if (canvasNormal) canvasNormal.style.display = "none";
+      if (canvasCompare) canvasCompare.style.display = "";
+      this.showCompareChart = false
     } else {
-      // Update datasets
-      this.chart.data.datasets = datasets;
-
-      // Ensure the plugins and title exist before trying to access them
-      // Otherwise error in ...titel.text assignment
-      if (!this.chart.options.plugins) {
-        this.chart.options.plugins = {};
-      }
-      if (!this.chart.options.plugins.title) {
-        this.chart.options.plugins.title = {};
-      }
-      this.chart.options.plugins.title.text = chartName;
-
-      this.chart.update()
+      if (canvasCompare) canvasCompare.style.display = "none";
+      if (canvasNormal) canvasNormal.style.display = "";
+      this.showCompareChart = true
     }
   }
 
-  createChart(chartName: string, datasets: any) {
-    this.chart = new Chart('canvas', {
+  createOrUpdateChart(chart: any, chartId: string, chartName: string, datasets: any): Chart {
+    if (chart instanceof (Chart)) {
+      // Rewrite chart with new data
+      chart = this.updateChart(chart, chartName, datasets);
+    } else {
+      // Creat new chart
+      chart = this.createChart(chartId, chartName, datasets);
+    }
+    return chart;
+  }
+
+  updateChart(chart: Chart, chartName: string, datasets: any) {
+    // Update datasets
+    chart.data.datasets = datasets;
+
+    // Ensure the plugins and title exist before trying to access them
+    // Otherwise error in ...titel.text assignment
+    if (!chart.options.plugins) {
+      chart.options.plugins = {};
+    }
+    if (!chart.options.plugins.title) {
+      chart.options.plugins.title = {};
+    }
+    chart.options.plugins.title.text = chartName;
+
+    chart.update()
+
+    return chart;
+  }
+
+  createChart(chartId: string, chartName: string, datasets: any): Chart {
+    return new Chart(chartId, {
       type: 'bar',
       data: {
         datasets: datasets
@@ -130,12 +166,12 @@ export class AmountPerSpeciesComponent {
   }
 
   // TODO: optimize
-  generateChartData(speciesAmountForStores: SpeciesAmountForStores[]) {
-    var datasets: { label: string; data: { x: string; y: number; }[] }[] = [];
+  generateChartData(speciesAmountForStores: SpeciesAmountForStores[]): ChartDatasets[] {
+    var datasets: ChartDatasets[] = [];
 
     speciesAmountForStores.forEach((speciesAmountForStore) => {
       // Map data to dataset
-      var newData: { x: string; y: number; }[] = [];
+      var newData: ChartDatasetsData[] = [];
       Object.entries(speciesAmountForStore.speciesAmounts).forEach(([key, value]) => {
         newData.push({
           x: key, y: value
@@ -146,7 +182,6 @@ export class AmountPerSpeciesComponent {
         label: speciesAmountForStore.name,
         data: newData
       })
-      newData = [];
     });
 
     return datasets;

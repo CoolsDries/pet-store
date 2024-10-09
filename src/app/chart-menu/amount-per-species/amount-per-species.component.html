@@ -1,4 +1,8 @@
 <div>
-  <button (click)="changeCompare()" class="button-primary">vergelijk winkels</button>
-  <canvas id="canvas">{{ chart }}</canvas>
+  <button class="button-primary" *ngIf="chartsToCompare" (click)="chartToggle();">
+    {{ showCompareChart ? "vergelijk": "samen" }}
+  </button>
+
+  <canvas id="canvasNormal">{{ chartNormal }}</canvas>
+  <canvas id="canvasCompare">{{ chartCompare }}</canvas>
 </div>

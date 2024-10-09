@@ -26,18 +26,18 @@ export class ChartService {
     );
   }
 
-    // GET: api/charts/CompareSpeciesAmountForStores
-    getCompareSpeciesAmountForStores(storeIds: number[]): Observable<CompareSpeciesAmountForStores> {
-      // Build id parameter list
-      let params = new HttpParams();
-      storeIds.forEach(id => {
-        params = params.append('ids', id.toString());
-      });
-  
-      return this.http.get<CompareSpeciesAmountForStores>(`${this.apiUrl}/CompareSpeciesAmountForStores`, { params }).pipe(
-        catchError(this.handleError)
-      );
-    }
+  // GET: api/charts/CompareSpeciesAmountForStores
+  getCompareSpeciesAmountForStores(storeIds: number[]): Observable<CompareSpeciesAmountForStores> {
+    // Build id parameter list
+    let params = new HttpParams();
+    storeIds.forEach(id => {
+      params = params.append('ids', id.toString());
+    });
+
+    return this.http.get<CompareSpeciesAmountForStores>(`${this.apiUrl}/CompareSpeciesAmountForStores`, { params }).pipe(
+      catchError(this.handleError)
+    );
+  }
 
   // Error handling method
   // TODO: improve messages
