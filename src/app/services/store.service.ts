@@ -34,20 +34,6 @@ export class StoreService {
     );
   }
 
-  // GET: api/Stores/{id}/Animals
-  getStoreAnimals(id: number): Observable<Animal[]> {
-    return this.http.get<Animal[]>(`${this.apiUrl}/${id}/Animals`).pipe(
-      catchError(this.handleError)
-    );
-  }
-
-  // GET: api/Stores/{id}/Species
-  getStoreSpecies(id: number): Observable<Species[]> {
-    return this.http.get<Species[]>(`${this.apiUrl}/${id}/Species`).pipe(
-      catchError(this.handleError)
-    );
-  }
-
   // PUT: api/Stores/{id}
   updateStore(id: number, store: Store): Observable<Store> {
     const httpOptions = {
